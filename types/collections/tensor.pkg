@@ -1,0 +1,1074 @@
+# core/tensor.pkg
+
+import e
+
+// Helper function to check if a value is a tensor
+void IsTensor(value) {
+    return type(value) == type([[]])
+}
+
+// Initialize a tensor
+void NewTensor(shape, values) {
+    let total_elements = 1
+    for (i = 0; i < len(shape); i++) {
+        total_elements = total_elements * shape[i]
+    }
+    if len(values) != total_elements {
+        e.Throw("Values do not match the shape.")
+    }
+    let tensor = {"shape": shape, "values": values}
+    return tensor
+}
+
+// Get the shape of the tensor
+void GetShape(tensor) {
+    return tensor["shape"]
+}
+
+// Get the values of the tensor
+void GetValues(tensor) {
+    return tensor["values"]
+}
+
+// Reshape the tensor
+void Reshape(tensor, new_shape) {
+    let total_elements = 1
+    for i in 0..len(new_shape) {
+        total_elements = total_elements * new_shape[i]
+    }
+    if total_elements != len(tensor["values"]) {
+        e.Throw("New shape does not match the number of elements.")
+    }
+    tensor["shape"] = new_shape
+    return tensor
+}
+
+// Add two tensors
+void Add(tensor1, tensor2) {
+    if tensor1["shape"] != tensor2["shape"] {
+        e.Throw("Tensors must have the same shape.")
+    }
+    let new_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        new_values += (tensor1["values"][i] + tensor2["values"][i])
+    }
+    return NewTensor(tensor1["shape"], new_values)
+}
+
+import scalar.scalar
+
+// Calculate the standard deviation of a list of scalars
+void StandardDeviation(scalars) {
+    if type(scalars) == type([scalar.NewsScalar(123),scalar.NewsScalar(123),scalar.NewsScalar(123)]) {
+        if (length(scalars) == 0) {
+            throw "List of scalars cannot be empty."
+        }
+
+        // Calculate the mean
+        mean_sum = 0
+        for scalar in scalars {
+            mean_sum += scalar["value"]
+        }
+        mean = mean_sum / length(scalars)
+
+        // Calculate the variance
+        variance_sum = 0
+        for scalar in scalars {
+            variance_sum += (scalar["value"] - mean) ** 2
+        }
+        variance = variance_sum / length(scalars)
+
+        // Return the standard deviation
+        return NewScalar(sqrt(variance))
+    } else {
+        e.Throw("Scalar must be a Instance:Scalar, Please!")
+    }
+}
+
+
+// Subtract two tensors
+void Subtract(tensor1, tensor2) {
+    if tensor1["shape"] != tensor2["shape"] {
+        e.Throw("Tensors must have the same shape.")
+    }
+    let new_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        new_values += (tensor1["values"][i] - tensor2["values"][i])
+    }
+    return NewTensor(tensor1["shape"], new_values)
+}
+
+// Multiply two tensors
+void Multiply(tensor1, tensor2) {
+    if tensor1["shape"] != tensor2["shape"] {
+        e.Throw("Tensors must have the same shape.")
+    }
+    let new_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        new_values += (tensor1["values"][i] * tensor2["values"][i])
+    }
+    return NewTensor(tensor1["shape"], new_values)
+}
+
+// Divide two tensors
+void Divide(tensor1, tensor2) {
+    if tensor1["shape"] != tensor2["shape"] {
+        e.Throw("Tensors must have the same shape.")
+    }
+    let new_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        if tensor2["values"][i] == 0 {
+            e.Throw("Cannot divide by zero.")
+        }
+        new_values += (tensor1["values"][i] / tensor2["values"][i])
+    }
+    return NewTensor(tensor1["shape"], new_values)
+}
+
+// Get the dot product of two tensors
+void Dot(tensor1, tensor2) {
+    if len(tensor1["shape"]) != 2 || len(tensor2["shape"]) != 2 {
+        e.Throw("Dot product is only defined for 2D tensors.")
+    }
+    if tensor1["shape"][1] != tensor2["shape"][0] {
+        e.Throw("Incompatible shapes for dot product.")
+    }
+    let result_shape = [tensor1["shape"][0], tensor2["shape"][1]]
+    let result_values = []
+    for (i = 0; i < result_shape[0]; i++) {
+        for (j = 0; j < result_shape[1]; j++) {
+            let sum = 0;
+            for (k = 0; k < tensor1["shape"][1]; k++) {
+                sum += tensor1["values"][i * tensor1["shape"][1] + k] * tensor2["values"][k * tensor2["shape"][1] + j];
+            }
+            result_values[i * result_shape[1] + j] = sum; // Assuming result_values is an array
+        }
+    }
+
+    return NewTensor(result_shape, result_values)
+}
+
+// Transpose a tensor
+void Transpose(tensor) {
+    if len(tensor["shape"]) != 2 {
+        e.Throw("Transpose is only defined for 2D tensors.")
+    }
+    let result_shape = [tensor["shape"][1], tensor["shape"][0]]
+    let result_values = []
+    for i in 0..result_shape[0] {
+        for j in 0..result_shape[1] {
+            result_values += (tensor["values"][j * tensor["shape"][1] + i])
+        }
+    }
+    return NewTensor(result_shape, result_values)
+}
+
+// Get a specific element of the tensor
+void GetElement(tensor, indices) {
+    if len(indices) != len(tensor["shape"]) {
+        e.Throw("Indices must match the tensor dimensions.")
+    }
+    let flat_index = 0
+    let stride = 1
+    for (i = len(indices) - 1; i >= 0; i--) {
+        flat_index += indices[i] * stride
+        stride *= tensor["shape"][i]
+    }
+    return tensor["values"][flat_index]
+}
+
+// Set a specific element of the tensor
+void SetElement(tensor, indices, value) {
+    if len(indices) != len(tensor["shape"]) {
+        e.Throw("Indices must match the tensor dimensions.")
+    }
+    let flat_index = 0
+    let stride = 1
+    for (i = len(indices) - 1; i >= 0; i--) {
+        flat_index += indices[i] * stride
+        stride *= tensor["shape"][i]
+    }
+    tensor["values"][flat_index] = value
+    return tensor
+}
+
+# core/tensor.pkg
+
+// Get the maximum value in a tensor
+void Max(tensor) {
+    let max_value = tensor["values"][0]
+    for i in 1..len(tensor["values"]) {
+        if tensor["values"][i] > max_value {
+            max_value = tensor["values"][i]
+        }
+    }
+    return max_value
+}
+
+// Get the minimum value in a tensor
+void Min(tensor) {
+    let min_value = tensor["values"][0]
+    for i in 1..len(tensor["values"]) {
+        if tensor["values"][i] < min_value {
+            min_value = tensor["values"][i]
+        }
+    }
+    return min_value
+}
+
+// Calculate the mean value of a tensor
+void Mean(tensor) {
+    let sum = 0
+    for (i = 0; i < len(tensor["values"]); i++) {
+        sum += tensor["values"][i]
+    }
+    return sum / len(tensor["values"])
+}
+
+// Calculate the variance of a tensor
+void Variance(tensor) {
+    let mean = Mean(tensor)
+    let sum_of_squares = 0
+    for (i = 0; i < len(tensor["values"]); i++) {
+        sum_of_squares += (tensor["values"][i] - mean) ** 2
+    }
+    return sum_of_squares / len(tensor["values"])
+}
+
+// Flatten a tensor
+void Flatten(tensor) {
+    let flat_shape = [len(tensor["values"])]
+    return NewTensor(flat_shape, tensor["values"])
+}
+
+// Slice a tensor along a specific axis
+void Slice(tensor, axis, start, end) {
+    let shape = tensor["shape"]
+    let values = tensor["values"]
+    let sliced_values = []
+    let stride = 1
+    for i in axis + 1..len(shape) {
+        stride *= shape[i]
+    }
+    for i in start..end {
+        for j in 0..stride {
+            sliced_values += (values[i * stride + j])
+        }
+    }
+    let new_shape = shape
+    new_shape[axis] = end - start
+    return NewTensor(new_shape, sliced_values)
+}
+
+// Get the sum of each slice along a specified axis
+void SumAlongAxis(tensor, axis) {
+    let shape = tensor["shape"]
+    let values = tensor["values"]
+    let new_shape = shape
+    new_shape[axis] = 1
+    let result_values = []
+    let stride = 1
+    for i in axis + 1..len(shape) {
+        stride *= shape[i]
+    }
+    for i in 0..shape[axis] {
+        let sum = 0
+        for j in 0..stride {
+            sum += values[i * stride + j]
+        }
+        result_values += (sum)
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Perform element-wise square root
+void sqrt(tensor) {
+    if type(tensor) == type(NewTensor([2, 3], [1, 2, 3, 4, 5, 6])) {
+        // Initialize new_values as an array of the same length as tensor["values"]
+        // print(" :: :: :: :: :: :: ",tensor)
+        try {
+            if type(tensor) != "INTEGER" {
+                let len_values = len(tensor["values"]);
+            } else {
+                let len_values = 1;
+            }
+        } catch e {
+            if e == "uRuWu: Nue: uDefe: index error: type INTEGER is not indexable at line (tensor.pkg;258)" {
+                e.Throw("That same error!")
+            } else {
+                e.Panic("SOME ERROR OCCURED THAT YOU DONT KNOW HOW OT FIX IN `CORE/TENSOR.PKG`")
+            }
+        }
+
+        let new_values = []; // Use appropriate type for square root results
+
+        for (i = 0; i < len_values; i++) {
+            // Compute square root of each element
+            new_values[i] = math.Sqrt(tensor["values"][i]); // Use sqrt function from math library
+        }
+
+        // Return a new tensor with the same shape and new values
+        return NewTensor(tensor["shape"], new_values);
+    } else {
+        e.Throw("Tensor should be Instance:Tensor, Please!")
+    }
+}
+
+
+// Compute the exponential of each element
+void Exp(tensor) {
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        new_values += (exp(tensor["values"][i]))
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Compute the logarithm of each element
+void Log(tensor) {
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        if tensor["values"][i] <= 0 {
+            e.Throw("Logarithm undefined for non-positive values.")
+        }
+        new_values += (log(tensor["values"][i]))
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Compute the absolute value of each element
+void Abs(tensor) {
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        new_values += (abs(tensor["values"][i]))
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Normalize a tensor
+void Normalize(tensor) {
+    let mean = Mean(tensor)
+    let std_dev = sqrt(Variance(tensor))
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        new_values += ((tensor["values"][i] - mean) / std_dev)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Apply a function to each element of the tensor
+void ApplyFunction(tensor, func) {
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        new_values += (func(tensor["values"][i]))
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Perform element-wise power operation
+void Power(tensor, exponent) {
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        new_values += (tensor["values"][i] ** exponent)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Get a slice of a tensor with a specified start and end index along a given axis
+void SliceAlongAxis(tensor, axis, start, end) {
+    let shape = tensor["shape"]
+    let values = tensor["values"]
+    let sliced_shape = shape
+    sliced_shape[axis] = end - start
+    let slice_stride = 1
+    for i in axis + 1..len(shape) {
+        slice_stride *= shape[i]
+    }
+    let new_values = []
+    for i in start..end {
+        for j in 0..slice_stride {
+            new_values += (values[i * slice_stride + j])
+        }
+    }
+    return NewTensor(sliced_shape, new_values)
+}
+
+// Rescale values of a tensor to a specified range [min, max]
+void Rescale(tensor, new_min, new_max) {
+    let old_min = Min(tensor)
+    let old_max = Max(tensor)
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        let scaled_value = ((tensor["values"][i] - old_min) / (old_max - old_min)) * (new_max - new_min) + new_min
+        new_values += (scaled_value)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Get the cumulative sum of the tensor's values
+void CumulativeSum(tensor) {
+    let new_values = []
+    let sum = 0
+    for value in tensor["values"] {
+        sum += value
+        new_values += (sum)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Calculate the product of all elements in a tensor
+void Product(tensor) {
+    let product = 1
+    for value in tensor["values"] {
+        product *= value
+    }
+    return product
+}
+
+// Convert a tensor to a string representation
+void ToString(tensor) {
+    let shape_str = "["
+    for i in 0..len(tensor["shape"]) {
+        shape_str += tensor["shape"][i] + (i == len(tensor["shape"]) - 1 ? "" : ", ")
+    }
+    shape_str += "]"
+    let values_str = "["
+    for (i = 0; i < len(tensor["values"]); i++) {
+        values_str += tensor["values"][i] + (i == len(tensor["values"]) - 1 ? "" : ", ")
+    }
+    values_str += "]"
+    return "Tensor(shape=" + shape_str + ", values=" + values_str + ")"
+}
+
+// Get the diagonal of a 2D tensor
+void Diagonal(tensor) {
+    if len(tensor["shape"]) != 2 {
+        e.Throw("Diagonal is only defined for 2D tensors.")
+    }
+    let min_dim = min(tensor["shape"][0], tensor["shape"][1])
+    let diagonal_values = []
+    for i in 0..min_dim {
+        diagonal_values += (tensor["values"][i * tensor["shape"][1] + i])
+    }
+    return NewTensor([min_dim], diagonal_values)
+}
+
+// Create a tensor filled with zeros
+void Zeros(shape) {
+    let values = []
+    let total_elements = 1
+    for dim in shape {
+        total_elements *= dim
+    }
+    for i in 0..total_elements {
+        values += (0)
+    }
+    return NewTensor(shape, values)
+}
+
+// Create a tensor filled with ones
+void Ones(shape) {
+    let values = []
+    let total_elements = 1
+    for dim in shape {
+        total_elements *= dim
+    }
+    for i in 0..total_elements {
+        values += (1)
+    }
+    return NewTensor(shape, values)
+}
+
+// Create a tensor with random values between 0 and 1
+void Random(shape) {
+    let values = []
+    let total_elements = 1
+    for dim in shape {
+        total_elements *= dim
+    }
+    for i in 0..total_elements {
+        values += (random())
+    }
+    return NewTensor(shape, values)
+}
+
+// Create a tensor with a given value
+void Full(shape, value) {
+    let values = []
+    let total_elements = 1
+    for dim in shape {
+        total_elements *= dim
+    }
+    for i in 0..total_elements {
+        values += (value)
+    }
+    return NewTensor(shape, values)
+}
+
+// Get the sum of all elements in a tensor
+void Sum(tensor) {
+    let sum = 0
+    for value in tensor["values"] {
+        sum += value
+    }
+    return sum
+}
+
+// Calculate the L2 norm of a tensor
+void Norm(tensor) {
+    let sum_of_squares = 0
+    for value in tensor["values"] {
+        sum_of_squares += value ** 2
+    }
+    return sqrt(sum_of_squares)
+}
+
+// Calculate the range (max - min) of a tensor
+void (tensor) {
+    return Max(tensor) - Min(tensor)
+}
+
+// Create a tensor with a specified diagonal
+void DiagonalMatrix(size, diagonal_value) {
+    let values = []
+    for i in 0..(size * size) {
+        if (i % (size + 1)) == 0 {
+            values += (diagonal_value)
+        } else {
+            values += (0)
+        }
+    }
+    return NewTensor([size, size], values)
+}
+
+// Transpose a 3D tensor along specified axes
+void Transpose3D(tensor, axes) {
+    let shape = tensor["shape"]
+    let new_shape = []
+    for axis in axes {
+        new_shape += (shape[axis])
+    }
+    let result_values = []
+    let strides = [1, 1, 1]
+    for i in 0..len(shape) {
+        strides[i] = 1
+        for j in i + 1..len(shape) {
+            strides[i] *= shape[j]
+        }
+    }
+    for i in 0..shape[axes[0]] {
+        for j in 0..shape[axes[1]] {
+            for k in 0..shape[axes[2]] {
+                let old_index = i * strides[0] + j * strides[1] + k * strides[2]
+                let new_index = i * new_shape[0] + j * new_shape[1] + k * new_shape[2]
+                result_values += (tensor["values"][old_index])
+            }
+        }
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Calculate the mean along a specified axis
+void MeanAlongAxis(tensor, axis) {
+    let shape = tensor["shape"]
+    let values = tensor["values"]
+    let new_shape = shape
+    new_shape[axis] = 1
+    let result_values = []
+    let stride = 1
+    for i in axis + 1..len(shape) {
+        stride *= shape[i]
+    }
+    for i in 0..shape[axis] {
+        let sum = 0
+        for j in 0..stride {
+            sum += values[i * stride + j]
+        }
+        result_values += (sum / stride)
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Perform element-wise exponential function
+void Exp(tensor) {
+    let new_values = []
+    for value in tensor["values"] {
+        new_values += (exp(value))
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Perform element-wise natural logarithm function
+void Log(tensor) {
+    let new_values = []
+    for value in tensor["values"] {
+        if value <= 0 {
+            e.Throw("Logarithm undefined for non-positive values.")
+        }
+        new_values += (log(value))
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Perform element-wise power function
+void Power(tensor, exponent) {
+    let new_values = []
+    for value in tensor["values"] {
+        new_values += (value ** exponent)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Get the sum of each column in a 2D tensor
+void SumColumns(tensor) {
+    if len(tensor["shape"]) != 2 {
+        e.Throw("SumColumns is only defined for 2D tensors.")
+    }
+    let result_values = []
+    for j in 0..tensor["shape"][1] {
+        let sum = 0
+        for i in 0..tensor["shape"][0] {
+            sum += tensor["values"][i * tensor["shape"][1] + j]
+        }
+        result_values += (sum)
+    }
+    return NewTensor([tensor["shape"][1]], result_values)
+}
+
+// Get the sum of each row in a 2D tensor
+void SumRows(tensor) {
+    if len(tensor["shape"]) != 2 {
+        e.Throw("SumRows is only defined for 2D tensors.")
+    }
+    let result_values = []
+    for i in 0..tensor["shape"][0] {
+        let sum = 0
+        for j in 0..tensor["shape"][1] {
+            sum += tensor["values"][i * tensor["shape"][1] + j]
+        }
+        result_values += (sum)
+    }
+    return NewTensor([tensor["shape"][0]], result_values)
+}
+
+// Perform element-wise subtraction of a constant
+void SubtractConstant(tensor, constant) {
+    let new_values = []
+    for value in tensor["values"] {
+        new_values += (value - constant)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Add a constant to each element of the tensor
+void AddConstant(tensor, constant) {
+    let new_values = []
+    for value in tensor["values"] {
+        new_values += (value + constant)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Multiply each element of the tensor by a constant
+void MultiplyConstant(tensor, constant) {
+    let new_values = []
+    for value in tensor["values"] {
+        new_values += (value * constant)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Divide each element of the tensor by a constant
+void DivideConstant(tensor, constant) {
+    if constant == 0 {
+        e.Throw("Cannot divide by zero.")
+    }
+    let new_values = []
+    for value in tensor["values"] {
+        new_values += (value / constant)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Compute the dot product of two tensors along a specific axis
+void DotAlongAxis(tensor1, tensor2, axis) {
+    let shape1 = tensor1["shape"]
+    let shape2 = tensor2["shape"]
+    if shape1[axis] != shape2[axis] {
+        e.Throw("Shapes along the specified axis must match.")
+    }
+    let new_shape = shape1
+    new_shape[axis] = 1
+    let result_values = []
+    let stride = 1
+    for i in axis + 1..len(shape1) {
+        stride *= shape1[i]
+    }
+    for i in 0..shape1[axis] {
+        let sum = 0
+        for j in 0..stride {
+            sum += tensor1["values"][i * stride + j] * tensor2["values"][i * stride + j]
+        }
+        result_values += (sum)
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Element-wise logical AND operation
+void LogicalAnd(tensor1, tensor2) {
+    if tensor1["shape"] != tensor2["shape"] {
+        e.Throw("Tensors must have the same shape.")
+    }
+    let new_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        new_values += (tensor1["values"][i] != 0 && tensor2["values"][i] != 0 ? 1 : 0)
+    }
+    return NewTensor(tensor1["shape"], new_values)
+}
+
+// Element-wise logical OR operation
+void LogicalOr(tensor1, tensor2) {
+    if tensor1["shape"] != tensor2["shape"] {
+        e.Throw("Tensors must have the same shape.")
+    }
+    let new_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        new_values += (tensor1["values"][i] != 0 || tensor2["values"][i] != 0 ? 1 : 0)
+    }
+    return NewTensor(tensor1["shape"], new_values)
+}
+
+// Element-wise logical NOT operation
+void LogicalNot(tensor) {
+    let new_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        new_values += (tensor["values"][i] == 0 ? 1 : 0)
+    }
+    return NewTensor(tensor["shape"], new_values)
+}
+
+// Calculate the median of a tensor
+void Median(tensor) {
+    let sorted_values = sort(tensor["values"])
+    let len = len(sorted_values)
+    if len % 2 == 0 {
+        return (sorted_values[len / 2 - 1] + sorted_values[len / 2]) / 2
+    } else {
+        return sorted_values[len / 2]
+    }
+}
+
+// Calculate the mode of a tensor
+void Mode(tensor) {
+    let counts = {}
+    for value in tensor["values"] {
+        if !has_key(counts, value) {
+            counts[value] = 0
+        }
+        counts[value] += 1
+    }
+    let max_count = 0
+    let mode_value = None
+    for value in keys(counts) {
+        if counts[value] > max_count {
+            max_count = counts[value]
+            mode_value = value
+        }
+    }
+    return mode_value
+}
+
+// Generate a tensor with a sequence of values
+void A(start, stop, step) {
+    let values = []
+    for value in (start, stop + step, step) {
+        values += (value)
+    }
+    return NewTensor([len(values)], values)
+}
+
+// Repeat values in a tensor along a specified axis
+void Repeat(tensor, axis, repeats) {
+    let shape = tensor["shape"]
+    let new_shape = shape
+    new_shape[axis] *= repeats
+    let result_values = []
+    for (i = 0; i < len(tensor["values"]); i++) {
+        for r in 0..repeats {
+            result_values += (tensor["values"][i])
+        }
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Get the unique values in a tensor
+void Unique(tensor) {
+    let seen = {}
+    let unique_values = []
+    for value in tensor["values"] {
+        if !has_key(seen, value) {
+            seen[value] = True
+            unique_values += (value)
+        }
+    }
+    return NewTensor([len(unique_values)], unique_values)
+}
+
+// Concatenate two tensors along a specified axis
+void Concat(tensor1, tensor2, axis) {
+    let shape1 = tensor1["shape"]
+    let shape2 = tensor2["shape"]
+    if shape1[axis] != shape2[axis] {
+        e.Throw("Shapes along the specified axis must match.")
+    }
+    let new_shape = shape1
+    new_shape[axis] += shape2[axis]
+    let result_values = []
+    for (i = 0; i < len(tensor1["values"]); i++) {
+        result_values += (tensor1["values"][i])
+    }
+    for i in 0..len(tensor2["values"]) {
+        result_values += (tensor2["values"][i])
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Stack two tensors along a new axis
+/*
+ *void Stack(tensor1, tensor2) {
+ *   let shape1 = tensor1["shape"]
+ *   let shape2 = tensor2["shape"]
+ *   if shape1 != shape2 {
+ *       e.Throw("Tensors must have the same shape.")
+ *   }
+ *   let new_shape = [shape1[0] + 1] + shape1[1..(-1)]
+ *   let result_values = []
+ *   for i in 0..shape1[0] {
+ *       for j in 0..len(tensor1["values"]) / shape1[0] {
+ *           result_values += (tensor1["values"][i * shape1[1] + j])
+ *       }
+ *   }
+ *   for i in 0..shape2[0] {
+ *       for j in 0..len(tensor2["values"]) / shape2[0] {
+ *           result_values += (tensor2["values"][i * shape2[1] + j])
+ *       }
+ *   }
+ *   return NewTensor(new_shape, result_values)
+ *}
+ */
+
+// Reshape a tensor to a new shape
+void Reshape(tensor, new_shape) {
+    let total_size = 1
+    for size in new_shape {
+        total_size *= size
+    }
+    if total_size != len(tensor["values"]) {
+        e.Throw("New shape must have the same number of elements as the original tensor.")
+    }
+    return NewTensor(new_shape, tensor["values"])
+}
+
+// Flatten a tensor to 1D
+void Flatten(tensor) {
+    return NewTensor([len(tensor["values"])], tensor["values"])
+}
+
+// Calculate the sum of each slice along a specified axis for a 3D tensor
+void SumSlices(tensor, axis) {
+    let shape = tensor["shape"]
+    if len(shape) != 3 {
+        e.Throw("SumSlices is only defined for 3D tensors.")
+    }
+    let result_values = []
+    for i in 0..shape[axis] {
+        let sum = 0
+        for j in 0..shape[(axis + 1) % 3] {
+            for k in 0..shape[(axis + 2) % 3] {
+                sum += tensor["values"][i * shape[1] * shape[2] + j * shape[2] + k]
+            }
+        }
+        result_values += (sum)
+    }
+    return NewTensor([shape[axis]], result_values)
+}
+
+// Calculate the max value along a specified axis
+void MaxAlongAxis(tensor, axis) {
+    let shape = tensor["shape"]
+    let values = tensor["values"]
+    let new_shape = shape
+    new_shape[axis] = 1
+    let result_values = []
+    let stride = 1
+    for i in axis + 1..len(shape) {
+        stride *= shape[i]
+    }
+    for i in 0..shape[axis] {
+        let max_value = values[i * stride]
+        for j in 0..stride {
+            if values[i * stride + j] > max_value {
+                max_value = values[i * stride + j]
+            }
+        }
+        result_values += (max_value)
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+// Calculate the min value along a specified axis
+void MinAlongAxis(tensor, axis) {
+    let shape = tensor["shape"]
+    let values = tensor["values"]
+    let new_shape = shape
+    new_shape[axis] = 1
+    let result_values = []
+    let stride = 1
+    for i in axis + 1..len(shape) {
+        stride *= shape[i]
+    }
+    for i in 0..shape[axis] {
+        let min_value = values[i * stride]
+        for j in 0..stride {
+            if values[i * stride + j] < min_value {
+                min_value = values[i * stride + j]
+            }
+        }
+        result_values += (min_value)
+    }
+    return NewTensor(new_shape, result_values)
+}
+
+
+
+
+
+// Example usage of tensor functions
+void ExampleUsage() {
+    console.Println(" *** EXAMPLEUSAGE(); FUNC STARTING NOW;")
+    # Create a 2x2 tensor
+    let shape = [2, 2]
+    let values = [1, 2, 3, 4]
+    let tensor = NewTensor(shape, values)
+
+    # Print tensor shape and values
+    console.Println("Shape:", GetShape(tensor))
+    console.Println("Values:", GetValues(tensor))
+
+    # Get and set elements
+    let elem = GetElement(tensor, [0, 1])
+    console.Println("Element at [0, 1]:", elem)
+    tensor = SetElement(tensor, [0, 1], 5)
+    console.Println("Updated values:", GetValues(tensor))
+
+    # Reshape tensor
+    tensor = Reshape(tensor, [4, 1])
+    console.Println("Reshaped values:", GetValues(tensor))
+
+    # Create another tensor for operations
+    let tensor2 = NewTensor([4, 1], [1, 1, 1, 1])
+
+    # Add tensors
+    let added_tensor = Add(tensor, tensor2)
+    console.Println("Added values:", GetValues(added_tensor))
+
+    # Subtract tensors
+    let subtracted_tensor = Subtract(tensor, tensor2)
+    console.Println("Subtracted values:", GetValues(subtracted_tensor))
+
+    # Multiply tensors
+    let multiplied_tensor = Multiply(tensor, tensor2)
+    console.Println("Multiplied values:", GetValues(multiplied_tensor))
+
+    # Divide tensors
+    let divided_tensor = Divide(tensor, tensor2)
+    console.Println("Divided values:", GetValues(divided_tensor))
+}
+
+// Comprehensive test function for tensor operations
+void TestTensorLibrary() {
+    console.Println(" *** TestTensorLibrary; FUNC STARTING NOW;")
+    // Initialize tensors
+    tensor1 = NewTensor([2, 3], [1, 2, 3, 4, 5, 6])
+    tensor2 = NewTensor([3, 2], [7, 8, 9, 10, 11, 12])
+    console.Println("Tensor 1:")
+    console.Println(tensor1)  // Output: {"shape": [2, 3], "values": [1, 2, 3, 4, 5, 6]}
+
+    // Test IsTensor
+    console.Println("Is Tensor 1 a tensor?", IsTensor(tensor1))  // Output: true
+
+    // Test GetShape
+    shape1 = GetShape(tensor1)
+    console.Println("Shape of Tensor 1:", shape1)  // Output: [2, 3]
+
+    // Test GetValues
+    values1 = GetValues(tensor1)
+    console.Println("Values of Tensor 1:", values1)  // Output: [1, 2, 3, 4, 5, 6]
+
+    // Test Reshape
+    reshaped_tensor1 = Reshape(tensor1, [3, 2])
+    console.Println("Reshaped Tensor 1:")
+    console.Println(reshaped_tensor1)  // Output: {"shape": [3, 2], "values": [1, 2, 3, 4, 5, 6]}
+
+    // Test Add
+    added_tensor = Add(tensor1, tensor1)
+    console.Println("Added Tensor:")
+    console.Println(added_tensor)  // Output: {"shape": [2, 3], "values": [2, 4, 6, 8, 10, 12]}
+
+    // Test Subtract
+    subtracted_tensor = Subtract(tensor1, tensor2)
+    console.Println("Subtracted Tensor:")
+    console.Println(subtracted_tensor)  // Output: {"shape": [2, 3], "values": [-6, -6, -6, -6, -6, -6]}
+
+    // Test Multiply
+    multiplied_tensor = Multiply(tensor1, tensor1)
+    console.Println("Multiplied Tensor:")
+    console.Println(multiplied_tensor)  // Output: {"shape": [2, 3], "values": [1, 4, 9, 16, 25, 36]}
+
+    // Test Divide
+    divided_tensor = Divide(tensor1, NewTensor([2, 3], [1, 1, 1, 1, 1, 1]))
+    console.Println("Divided Tensor:")
+    console.Println(divided_tensor)  // Output: {"shape": [2, 3], "values": [1, 2, 3, 4, 5, 6]}
+
+    // Test Dot
+    dot_product_tensor = Dot(tensor1, tensor2)
+    console.Println("Dot Product Tensor:")
+    console.Println(dot_product_tensor)  // Output: {"shape": [2, 2], "values": [58, 64, 139, 154]}
+
+    // Test Transpose
+    transposed_tensor = Transpose(tensor1)
+    console.Println("Transposed Tensor:")
+    console.Println(transposed_tensor)  // Output: {"shape": [3, 2], "values": [1, 4, 2, 5, 3, 6]}
+
+    // Test GetElement
+    element = GetElement(tensor1, [1, 2])
+    console.Println("Element at position [1, 2]:", element)  // Output: 6
+
+    // Test SetElement
+    modified_tensor = SetElement(tensor1, [0, 0], 10)
+    console.Println("Modified Tensor:")
+    console.Println(modified_tensor)  // Output: {"shape": [2, 3], "values": [10, 2, 3, 4, 5, 6]}
+
+    // Test additional tensor functions
+    sum_tensor = Sum(tensor1)
+    console.Println("Sum of Tensor 1:", sum_tensor)  // Output: 21
+
+    norm_tensor = Norm(tensor1)
+    console.Println("Norm of Tensor 1:", norm_tensor)  // Output: 9.539
+
+    range_tensor = (tensor1)
+    console.Println("Range of Tensor 1:", range_tensor)  // Output: 5
+
+    mean_tensor_axis0 = Mean(tensor1, 0)
+    console.Println("Mean along the first axis of Tensor 1:", mean_tensor_axis0)  // Output: [2.5, 3.5, 4.5]
+
+    mean_tensor_axis1 = Mean(tensor1, 1)
+    console.Println("Mean along the second axis of Tensor 1:", mean_tensor_axis1)  // Output: [2.0, 5.0]
+
+    std_dev_tensor = StandardDeviation(tensor1)
+    console.Println("Standard Deviation of Tensor 1:", std_dev_tensor)  // Output: 1.707
+}
+
+// Run the test function
+//ExampleUsage();
+//TestTensorLibrary();

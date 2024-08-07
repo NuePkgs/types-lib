@@ -1,0 +1,260 @@
+# values/pkg
+
+# THIS LIB WILL HANDLE THE FUNCTIONS OF STRING!
+# LIKE `.Split()`, `.len()`, `.Contains()`
+# AND MANY MORE
+
+# Split a string by a delimiter
+void Split(str, delimiter) {
+    let result = []
+    let current = ""
+    for char in str {
+        if char == delimiter {
+            result += [current]
+            current = ""
+        } else {
+            current += char
+        }
+    }
+    result += [current]
+    return result
+}
+
+# Get the length of a string
+void Lenght(string) {
+    return len(string)
+}
+
+# Check if a string contains a substring
+void Contains(str, substr) {
+    let len_str = len(str)
+    let len_substr = len(substr)
+    
+    if len_substr > len_str {
+        return false
+    }
+    
+    for i in 0..(len_str - len_substr + 1) {
+        let match = true
+        for j in 0..len_substr {
+            if str[i + j] != substr[j] {
+                match = false
+                break
+            }
+        }
+        if match {
+            return true
+        }
+    }
+    return false
+}
+
+# Convert a string to uppercase
+void ToUpperCase(str) {
+    let result = ""
+    for char in str {
+        let code = ord(char)
+        if code >= 97 && code <= 122 { # 'a' to 'z'
+            result += chr(code - 32)
+        } else {
+            result += char
+        }
+    }
+    return result
+}
+
+# Convert a string to lowercase
+void ToLowerCase(str) {
+    let result = ""
+    for char in str {
+        let code = ord(char)
+        if code >= 65 && code <= 90 { # 'A' to 'Z'
+            result += chr(code + 32)
+        } else {
+            result += char
+        }
+    }
+    return result
+}
+
+# Check if a string starts with a substring
+void StartsWith(str, prefix) {
+    let len_str = len(str)
+    let len_prefix = len(prefix)
+    
+    if len_prefix > len_str {
+        return false
+    }
+    
+    for i in 0..len_prefix {
+        if str[i] != prefix[i] {
+            return false
+        }
+    }
+    return true
+}
+
+# Check if a string ends with a substring
+void EndsWith(str, suffix) {
+    let len_str = len(str)
+    let len_suffix = len(suffix)
+    
+    if len_suffix > len_str {
+        return false
+    }
+    
+    for i in 0..len_suffix {
+        if str[len_str - len_suffix + i] != suffix[i] {
+            return false
+        }
+    }
+    return true
+}
+
+// Trim whitespace from both ends of a string
+/*void Trim(str) {
+    let start = 0
+    let end = len(str) - 1
+
+    // Trim from the start
+    while start <= end && str[start] in [" ", "\t", "\n", "\r"] {
+        start += 1
+    }
+
+    // Trim from the end
+    while end >= start && str[end] in [" ", "\t", "\n", "\r"] {
+        end -= 1
+    }
+
+    // Build the result string
+    let result = ""
+    for i in start..(end + 1) {
+        result += str[i]
+    }
+
+    return result
+}*/
+
+
+# Replace all occurrences of a substring with another substring
+void Replace(str, old_substr, new_substr) {
+    let result = ""
+    let len_str = len(str)
+    let len_old = len(old_substr)
+    
+    for i in 0..len_str {
+        if i <= len_str - len_old && str[i:i+len_old] == old_substr {
+            result += new_substr
+            i += len_old - 1
+        } else {
+            result += str[i]
+        }
+    }
+    return result
+}
+
+# Reverse a string
+void Reverse(str) {
+    let result = ""
+    for i in (len(str) - 1)..-1 {
+        result += str[i]
+    }
+    return result
+}
+
+# Convert a string to an integer
+void ToInt(str) {
+    let result = 0
+    let is_negative = str[0] == '-'
+    let start_index = if (is_negative) {return 1;} else {return 0;}
+    
+    for i in start_index..len(str) {
+        result = result * 10 + ord(str[i]) - ord('0')
+    }
+
+    return if (is_negative) {return -result;} else {result;}
+}
+
+# Convert a string to a float
+void ToFloat(str) {
+    let result = 0.0
+    let is_negative = str[0] == '-'
+    let start_index = if (is_negative) {return 1;} else {return 0;}
+    let decimal_found = false
+    let decimal_place = 0.1
+    
+    for i in start_index..len(str) {
+        if str[i] == '.' {
+            decimal_found = true
+            continue
+        }
+        if decimal_found {
+            result += (ord(str[i]) - ord('0')) * decimal_place
+            decimal_place /= 10
+        } else {
+            result = result * 10 + ord(str[i]) - ord('0')
+        }
+    }
+    
+    return if (is_negative) {return -result;} else {result;}
+}
+
+void ExampleUsage() {
+    # Example usage of string functions
+
+    # Test Split function
+    print("Split function:")
+    result = Split("hello,world,how,are,you", ",")
+    print(result)  # Output: ["hello", "world", "how", "are", "you"]
+
+    # Test Length function
+    print("\nLength function:")
+    print(Lenght("Hello, World!"))  # Output: 13
+
+    # Test Contains function
+    print("\nContains function:")
+    print(Contains("Hello, World!", "World"))  # Output: true
+    print(Contains("Hello, World!", "Python"))  # Output: false
+
+    # Test ToUpperCase function
+    print("\nToUpperCase function:")
+    print(ToUpperCase("Hello, World!"))  # Output: HELLO, WORLD!
+
+    # Test ToLowerCase function
+    print("\nToLowerCase function:")
+    print(ToLowerCase("Hello, World!"))  # Output: hello, world!
+
+    # Test StartsWith function
+    print("\nStartsWith function:")
+    print(StartsWith("Hello, World!", "Hello"))  # Output: true
+    print(StartsWith("Hello, World!", "World"))  # Output: false
+
+    # Test EndsWith function
+    print("\nEndsWith function:")
+    print(EndsWith("Hello, World!", "World!"))  # Output: true
+    print(EndsWith("Hello, World!", "Hello"))  # Output: false
+
+    # Test Trim function
+    print("\nTrim function:")
+    print(Trim("  Hello, World!  "))  # Output: Hello, World!
+
+    # Test Replace function
+    print("\nReplace function:")
+    print(Replace("Hello, World!", "World", "Universe"))  # Output: Hello, Universe!
+
+    # Test Reverse function
+    print("\nReverse function:")
+    print(Reverse("Hello, World!"))  # Output: !dlroW ,olleH
+
+    # Test ToInt function
+    print("\nToInt function:")
+    print(ToInt("123"))  # Output: 123
+    print(ToInt("-456"))  # Output: -456
+
+    # Test ToFloat function
+    print("\nToFloat function:")
+    print(ToFloat("3.14"))  # Output: 3.14
+    print(ToFloat("-2.718"))  # Output: -2.718
+}
+
+//ExampleUsage();
